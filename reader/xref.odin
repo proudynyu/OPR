@@ -8,6 +8,8 @@ import "core:strconv"
 import "core:strings"
 import "core:fmt"
 
+XREF_TYPE :: map[int]i64
+
 find_startxref :: proc(file: os.Handle) -> (i64, io.Error) {
     chunk_size: i64 = 1024
     startxref_token := "startxref"
@@ -43,7 +45,7 @@ find_startxref :: proc(file: os.Handle) -> (i64, io.Error) {
     return -1, .EOF
 }
 
-find_xref :: proc(file: os.Handle, ref: i64) -> (xref_map: map[int]i64, trailer_part: []string) {
+find_xref :: proc(file: os.Handle, ref: i64) -> (xref_map: XREF_TYPE, trailer_part: []string) {
     os.seek(file, ref, os.SEEK_SET)
     buffer := make([]byte, 1024)
     n, err := os.read(file, buffer)
@@ -82,4 +84,45 @@ find_xref :: proc(file: os.Handle, ref: i64) -> (xref_map: map[int]i64, trailer_
         i = i + end
     }
     return xref_map, trailer_part
+}
+
+read_trailer :: proc(file: ^os.Handle, xref: ^XREF_TYPE, trailer: ^Parsed_Trailer) {
+    root_offset := trailer.root[0]
+    root, ok    := read_root(root_offset, xref, file)
+    if !ok {
+        log.fatalf("Could not read Root offset")
+    }
+    fmt.printf(root)
+    // pages_offset := strconv.atoi(trailer.pages[0])
+    // id_offset := strconv.atoi(trailer.id[0])
+    // info_offset := strconv.atoi(trailer.info[0])
+
+    // pages   := read_pages()
+    // info    := read_info()
+}
+
+read_root :: proc(offset: string, xref: ^XREF_TYPE, file: ^os.Handle) -> (string, bool) {
+    if len(offset) <= 0 {
+        return "", false
+    }
+    value := read_xref(file,xref,strconv.atoi(offset))
+    lines := strings.split_lines(value)
+    catalog := [dynamic]string{}
+    for line in lines {
+        if strings.contains(line, "endobj") { break }
+        append(&catalog, line)
+    }
+    return strings.join(catalog[:], "\n"), true
+}
+
+read_xref :: proc(file: ^os.Handle, xref: ^map[int]i64, trailer_n: int) -> string {
+    offset := xref[trailer_n]
+    os.seek(file^, offset, os.SEEK_SET)
+
+    buffer := make([]byte, 1024)
+    n, err := os.read(file^, buffer)
+    if err != nil {
+        log.fatalf("Error trying to read the offset: %i", offset)
+    }
+    return transmute(string)buffer[:n]
 }

@@ -12,9 +12,8 @@ main :: proc() {
     defer os.close(file)
 
     xref_n, _ := reader.find_startxref(file)
-
     xref_table, trailer_list := reader.find_xref(file, xref_n)
     trailer := reader.new_trailer_obj(trailer_list)
-    fmt.println(xref_table)
-    fmt.println(trailer)
+    parsed_trailer := reader.treat_trailer(&trailer)
+    reader.read_trailer(&file, &xref_table, &parsed_trailer)
 }
