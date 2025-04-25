@@ -15,5 +15,6 @@ main :: proc() {
     xref_table, trailer_list := reader.find_xref(file, xref_n)
     trailer := reader.new_trailer_obj(trailer_list)
     parsed_trailer := reader.treat_trailer(&trailer)
+    fmt.println(parsed_trailer)
     reader.read_trailer(&file, &xref_table, &parsed_trailer)
 }

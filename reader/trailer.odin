@@ -3,27 +3,24 @@ package reader
 import "core:strings"
 import "core:text/regex"
 import "core:strconv"
+import "core:fmt"
 
 Trailer :: struct {
     root:   string,
-    pages:  string,
     info:   string,
 }
 
 Parsed_Trailer :: struct {
     root:   []string,
-    pages:  []string,
     info:   []string,
 }
 
 ROOT    :: "/Root"
 INFO    :: "/Info"
-PAGES   :: "/Pages"
 
 Pattern :: enum {
     ROOT,
     INFO,
-    PAGES
 }
 
 @(private)
@@ -43,11 +40,6 @@ new_trailer_obj :: proc(lines: []string) -> Trailer {
             continue
         }
 
-        if strings.contains(line, PAGES) {
-            trailer.pages = get_line_value(line, PAGES)
-            continue
-        }
-
         if strings.contains(line, INFO) {
             trailer.info = get_line_value(line, INFO)
             continue
@@ -57,22 +49,21 @@ new_trailer_obj :: proc(lines: []string) -> Trailer {
 }
 
 treat_trailer :: proc(trailer: ^Trailer) -> Parsed_Trailer {
-    pages :=    parse_trailer(trailer, Pattern.PAGES)
     root :=     parse_trailer(trailer, Pattern.ROOT)
     info :=     parse_trailer(trailer, Pattern.INFO)
 
     return Parsed_Trailer {
         root,
         info,
-        pages
+        // pages
     }
 } 
 
 parse_trailer :: proc(trailer: ^Trailer, pattern: Pattern) -> []string {
     v := make([]string, 3)
     switch pattern {
-    case .PAGES: 
-        break
+    // case .PAGES: 
+    //     break
 
     case .ROOT:
         value := strings.split(trailer.root, " ")
@@ -83,6 +74,7 @@ parse_trailer :: proc(trailer: ^Trailer, pattern: Pattern) -> []string {
 
     case .INFO:
         value := strings.split(trailer.info, " ")
+        
         v[0] = value[0]
         v[1] = value[1]
         v[2] = value[2]

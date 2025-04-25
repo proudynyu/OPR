@@ -88,31 +88,40 @@ find_xref :: proc(file: os.Handle, ref: i64) -> (xref_map: XREF_TYPE, trailer_pa
 
 read_trailer :: proc(file: ^os.Handle, xref: ^XREF_TYPE, trailer: ^Parsed_Trailer) {
     root_offset := trailer.root[0]
-    root, ok    := read_root(root_offset, xref, file)
-    if !ok {
-        log.fatalf("Could not read Root offset")
+    root, found_root     := read_root(root_offset, xref, file)
+    if !found_root {
+        log.fatalf("Was not possible to read Root")
     }
-    fmt.printf(root)
-    // pages_offset := strconv.atoi(trailer.pages[0])
-    // id_offset := strconv.atoi(trailer.id[0])
-    // info_offset := strconv.atoi(trailer.info[0])
+    fmt.printfln("Root: %s", root)
 
-    // pages   := read_pages()
-    // info    := read_info()
+    info_offset := trailer.info[0]
+    info, found_info     := read_info(info_offset, xref, file)
+    if !found_info {
+        log.fatalf("Was not possible to read Info")
+    }
+    fmt.printfln("Info: %s", info)
 }
 
 read_root :: proc(offset: string, xref: ^XREF_TYPE, file: ^os.Handle) -> (string, bool) {
     if len(offset) <= 0 {
         return "", false
     }
-    value := read_xref(file,xref,strconv.atoi(offset))
-    lines := strings.split_lines(value)
+    content := read_xref(file,xref,strconv.atoi(offset))
+    lines := strings.split_lines(content)
     catalog := [dynamic]string{}
     for line in lines {
         if strings.contains(line, "endobj") { break }
         append(&catalog, line)
     }
     return strings.join(catalog[:], "\n"), true
+}
+
+read_info :: proc(offset: string, xref: ^XREF_TYPE, file: ^os.Handle) -> (string, bool) {
+    if len(offset) <= 0 {
+        return "", false
+    }
+    content := read_xref(file,xref,strconv.atoi(offset))
+    return content, true
 }
 
 read_xref :: proc(file: ^os.Handle, xref: ^map[int]i64, trailer_n: int) -> string {
