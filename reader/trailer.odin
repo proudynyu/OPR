@@ -4,6 +4,8 @@ import "core:strings"
 import "core:text/regex"
 import "core:strconv"
 import "core:fmt"
+import "core:log"
+import "core:os"
 
 Trailer :: struct {
     root:   string,
@@ -13,6 +15,11 @@ Trailer :: struct {
 Parsed_Trailer :: struct {
     root:   []string,
     info:   []string,
+}
+
+Trailer_Obj :: struct {
+    root: RootObj,
+    info: InfoObj
 }
 
 ROOT    :: "/Root"
@@ -55,16 +62,12 @@ treat_trailer :: proc(trailer: ^Trailer) -> Parsed_Trailer {
     return Parsed_Trailer {
         root,
         info,
-        // pages
     }
 } 
 
 parse_trailer :: proc(trailer: ^Trailer, pattern: Pattern) -> []string {
     v := make([]string, 3)
     switch pattern {
-    // case .PAGES: 
-    //     break
-
     case .ROOT:
         value := strings.split(trailer.root, " ")
         v[0] = value[0]
@@ -82,4 +85,23 @@ parse_trailer :: proc(trailer: ^Trailer, pattern: Pattern) -> []string {
     }
 
     return v
+}
+
+read_trailer :: proc(file: ^os.Handle, xref: ^XREF_TYPE, trailer: ^Parsed_Trailer) -> Trailer_Obj {
+    root_offset := trailer.root[0]
+    root, found_root     := get_obj(root_offset, xref, file)
+    if !found_root {
+        log.fatalf("Was not possible to read Root")
+    }
+
+    info_offset := trailer.info[0]
+    info, found_info     := get_obj(info_offset, xref, file)
+    if !found_info {
+        log.fatalf("Was not possible to read Info")
+    }
+
+    return Trailer_Obj{
+        root = read_root(strings.split_lines(root)),
+        info = read_info(strings.split_lines(info)),
+    }
 }

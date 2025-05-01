@@ -6,7 +6,6 @@ import "core:bytes"
 import "core:log"
 import "core:strconv"
 import "core:strings"
-import "core:fmt"
 
 XREF_TYPE :: map[int]i64
 
@@ -69,7 +68,6 @@ find_xref :: proc(file: os.Handle, ref: i64) -> (xref_map: XREF_TYPE, trailer_pa
         end := strconv.atoi(range_parts[1])
 
         i = i + 1
-        fmt.println(i, start, end)
         for j := 0; j < end; j = j + 1 {
             entry_parts := strings.split(lines[i + j], " ")
             if len(entry_parts) >= 3 {
@@ -84,44 +82,6 @@ find_xref :: proc(file: os.Handle, ref: i64) -> (xref_map: XREF_TYPE, trailer_pa
         i = i + end
     }
     return xref_map, trailer_part
-}
-
-read_trailer :: proc(file: ^os.Handle, xref: ^XREF_TYPE, trailer: ^Parsed_Trailer) {
-    root_offset := trailer.root[0]
-    root, found_root     := read_root(root_offset, xref, file)
-    if !found_root {
-        log.fatalf("Was not possible to read Root")
-    }
-    fmt.printfln("Root: %s", root)
-
-    info_offset := trailer.info[0]
-    info, found_info     := read_info(info_offset, xref, file)
-    if !found_info {
-        log.fatalf("Was not possible to read Info")
-    }
-    fmt.printfln("Info: %s", info)
-}
-
-read_root :: proc(offset: string, xref: ^XREF_TYPE, file: ^os.Handle) -> (string, bool) {
-    if len(offset) <= 0 {
-        return "", false
-    }
-    content := read_xref(file,xref,strconv.atoi(offset))
-    lines := strings.split_lines(content)
-    catalog := [dynamic]string{}
-    for line in lines {
-        if strings.contains(line, "endobj") { break }
-        append(&catalog, line)
-    }
-    return strings.join(catalog[:], "\n"), true
-}
-
-read_info :: proc(offset: string, xref: ^XREF_TYPE, file: ^os.Handle) -> (string, bool) {
-    if len(offset) <= 0 {
-        return "", false
-    }
-    content := read_xref(file,xref,strconv.atoi(offset))
-    return content, true
 }
 
 read_xref :: proc(file: ^os.Handle, xref: ^map[int]i64, trailer_n: int) -> string {
