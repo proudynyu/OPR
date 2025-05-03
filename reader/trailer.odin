@@ -19,7 +19,7 @@ Parsed_Trailer :: struct {
 
 Trailer_Obj :: struct {
     root: RootObj,
-    info: InfoObj
+    info: InfoObj,
 }
 
 ROOT    :: "/Root"
@@ -39,7 +39,7 @@ get_line_value :: proc(line: string, pattern: string) -> string {
     return strings.trim_space(v[1])
 }
 
-new_trailer_obj :: proc(lines: []string) -> Trailer {
+new_trailer :: proc(lines: []string) -> Trailer {
     trailer := Trailer{}
     for line, i in lines {
         if strings.contains(line, ROOT) {
@@ -87,21 +87,21 @@ parse_trailer :: proc(trailer: ^Trailer, pattern: Pattern) -> []string {
     return v
 }
 
-read_trailer :: proc(file: ^os.Handle, xref: ^XREF_TYPE, trailer: ^Parsed_Trailer) -> Trailer_Obj {
+get_trailer_obj :: proc(file: ^os.Handle, xref: ^XREF_TYPE, trailer: ^Parsed_Trailer) -> Trailer_Obj {
     root_offset := trailer.root[0]
-    root, found_root     := get_obj(root_offset, xref, file)
+    root, found_root := get_obj(file, xref, root_offset)
     if !found_root {
         log.fatalf("Was not possible to read Root")
     }
 
     info_offset := trailer.info[0]
-    info, found_info     := get_obj(info_offset, xref, file)
+    info, found_info     := get_obj(file, xref, info_offset)
     if !found_info {
         log.fatalf("Was not possible to read Info")
     }
 
     return Trailer_Obj{
-        root = read_root(strings.split_lines(root)),
-        info = read_info(strings.split_lines(info)),
+        root = get_root_obj(strings.split_lines(root)),
+        info = get_info_obj(strings.split_lines(info)),
     }
 }

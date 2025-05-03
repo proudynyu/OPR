@@ -9,7 +9,7 @@ InfoObj :: struct {
     creation_date: string
 }
 
-read_info :: proc(values: []string) -> (info: InfoObj) {
+get_info_obj :: proc(values: []string) -> (info: InfoObj) {
     for line in values {
         if strings.contains(line, "Creator") {
             info.creator = line
