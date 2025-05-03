@@ -7,8 +7,6 @@ import "core:log"
 import "core:strconv"
 import "core:strings"
 
-XREF_TYPE :: map[int]i64
-
 find_startxref :: proc(file: os.Handle) -> (i64, io.Error) {
     chunk_size: i64 = 1024
     startxref_token := "startxref"
