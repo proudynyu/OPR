@@ -23,15 +23,38 @@ main :: proc() {
     defer os.close(file)
 
     arena := reader.PDFArena{}
-    defer free(&arena)
 
     startxref, _ := reader.find_startxref(file)
     xref_table, trailer_list := reader.find_xref(file, startxref)
     arena.xref_table = xref_table
 
     tmp_trailer := reader.new_trailer(trailer_list)
-    defer free(&tmp_trailer)
 
-    reader.alloc_trailer_in_arena(&file, &arena, &tmp_trailer)
-    fmt.println(arena)
+    err := reader.alloc_trailer_in_arena(&file, &arena, &tmp_trailer)
+    if err != nil {
+        log.fatalf("Was not possible to allocate the trailer in the arena: %s", err)
+    }
+
+    err = reader.alloc_pages_in_arena(&file, &arena)
+    if err != nil {
+        log.fatalf("Was not possible to allocate the pages in the arena: %s", err)
+    }
+    
+    err = reader.alloc_kids_in_arena(&file, &arena)
+    if err != nil {
+        log.fatalf("Was not possible to allocate the kids in the arena: %s", err)
+    }
+
+    err = reader.alloc_content_stream(&arena)
+    if err != nil {
+        log.fatalf("Was not possible to allocate the content in the arena: %s", err)
+    }
+
+    err = reader.alloc_font_in_arena(&file, &arena)
+    if err != nil {
+        log.fatalf("Was not possible to allocate the font in the arena: %s", err)
+    }
+
+    reader.alloc_unicode_in_arena(&file, &arena)
+    reader.decode_hex(&file, &arena)
 }
