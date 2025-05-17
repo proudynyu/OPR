@@ -56,5 +56,5 @@ main :: proc() {
     }
 
     reader.alloc_unicode_in_arena(&file, &arena)
-    reader.decode_hex(&file, &arena)
+    reader.alloc_unicode_map(&arena)
 }

@@ -54,7 +54,11 @@ Trailer :: struct {
 }
 
 Font :: struct { obj: string }
-Unicode :: struct { obj: string }
+
+Unicode :: struct { 
+    obj: string,
+    unicode_map: map[string]string
+}
 
 ROOT    :: "/Root"
 INFO    :: "/Info"
