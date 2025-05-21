@@ -59,17 +59,14 @@ alloc_unicode_map :: proc(arena: ^PDFArena) {
     unicode: string = has_unicode ? decode_unicode_stream(arena.unicode.obj) : ""
     unicode_map := create_unicode_map(unicode)
     arena.unicode.unicode_map = unicode_map
-
-    decode_hex_text(arena)
 }
 
-
-decode_hex_text :: proc(arena: ^PDFArena) {
+decode_hex_text :: proc(arena: ^PDFArena) -> string {
     content := strings.join(arena.content.stream, "\n")
     encoded, ok := zlib_decode(transmute([]u8)content)
     if !ok {
         fmt.printf("Something went wrong decoding zlib the content stream")
-        return
+        return ""
     }
 
     bt_and_et := extract_bt_and_et(encoded)
@@ -81,8 +78,6 @@ decode_hex_text :: proc(arena: ^PDFArena) {
         append(&hex_values, l[1])
     }
 
-    // string_builder := strings.Builder{}
-    // strings.write_rune
     mapped := arena.unicode.unicode_map
     hex_strings := [dynamic]string{}
     for hex in hex_values {
@@ -94,8 +89,8 @@ decode_hex_text :: proc(arena: ^PDFArena) {
                 codepoint := u16(b[0]) << 8 | u16(b[1])
                 strings.write_rune(&str, rune(codepoint))
         }
-        fmt.println(str.buf[:])
-        // append(&hex_strings, str.buf[:])
+        append(&hex_strings, string(str.buf[:]))
     }
-    // fmt.println(hex_strings)
+
+    return strings.join(hex_strings[:], "\n")
 }

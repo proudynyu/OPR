@@ -57,4 +57,8 @@ main :: proc() {
 
     reader.alloc_unicode_in_arena(&file, &arena)
     reader.alloc_unicode_map(&arena)
+
+    content := reader.decode_hex_text(&arena)
+
+    fmt.println(content)
 }
